@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catalase Activity Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+html{color-scheme:light}
+body{margin:0}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* Layout: lab bench — controls beside a live apparatus drawing, data notebook below */
+:root{
+  --bg:#EDF2F1; --panel:#FFFFFF; --ink:#13262B; --muted:#56696D; --line:#CAD7D6;
+  --accent:#0D6F7E; --accent-ink:#FFFFFF; --accent-soft:#D5EBEE;
+  --water:#BFDCE4; --glass:#8FA9AE; --gas:#F7FBFC; --liquid:#E9E2B8;
+  --cold:#2F7BC0; --heat:#D2601A; --warn:#A8540E; --bad:#B3261E;
+  --f-display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --f-body:"Source Sans 3", "Segoe UI", Roboto, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D191C; --panel:#14252A; --ink:#E1ECEC; --muted:#93A9AC; --line:#29434A;
+  --accent:#43B6C6; --accent-ink:#062228; --accent-soft:#163C44;
+  --water:#1D4652; --glass:#6E8F95; --gas:#22383E; --liquid:#5B5530;
+  --cold:#5AA2E6; --heat:#F08A4B; --warn:#E3A35F; --bad:#F2867D; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0D191C; --panel:#14252A; --ink:#E1ECEC; --muted:#93A9AC; --line:#29434A;
+  --accent:#43B6C6; --accent-ink:#062228; --accent-soft:#163C44;
+  --water:#1D4652; --glass:#6E8F95; --gas:#22383E; --liquid:#5B5530;
+  --cold:#5AA2E6; --heat:#F08A4B; --warn:#E3A35F; --bad:#F2867D; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--f-body);}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:20px;padding-block:28px 56px;display:grid;gap:28px}
+header{display:grid;gap:8px}
+.eyebrow{font:600 12px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+h1{font:800 clamp(28px,4.4vw,44px)/1.05 var(--f-display);margin:0;text-wrap:balance}
+h2{font:600 22px/1.2 var(--f-display);margin:0;text-wrap:balance}
+h3{font:700 13px/1.2 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;margin:0;color:var(--muted)}
+.lede{max-width:64ch;margin:0;color:var(--muted)}
+.eq{font:600 15px/1 var(--f-mono);color:var(--ink);background:var(--accent-soft);padding:8px 12px;border-radius:6px;justify-self:start}
+
+.bench{display:grid;grid-template-columns:minmax(260px,330px) 1fr;gap:20px;align-items:start}
+@media (max-width:820px){.bench{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:18px;min-width:0}
+.ctrl{display:grid;gap:8px}
+.ctrl-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ctrl-val{font:700 20px/1 var(--f-mono);font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:600 14px/1 var(--f-mono);padding:9px 10px;min-width:44px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip:focus-visible,.btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn{font:700 16px/1 var(--f-body);padding:14px 16px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.btn:disabled{opacity:.5;cursor:progress}
+.btn.ghost{background:transparent;color:var(--accent);font-size:14px;padding:9px 12px}
+.btn.danger{border-color:var(--bad);color:var(--bad);background:transparent;font-size:14px;padding:9px 12px}
+.note{font-size:14px;color:var(--muted);margin:0}
+.fixed{font:600 13px/1.4 var(--f-mono);color:var(--muted);border-top:1px dashed var(--line);padding-top:12px;display:grid;gap:2px}
+
+.rig{padding:12px 12px 16px}
+.rig svg{width:100%;height:auto;display:block}
+.readout{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px;padding-inline:8px}
+.big{font:700 clamp(30px,5vw,44px)/1 var(--f-mono);font-variant-numeric:tabular-nums}
+.big small{font-size:.42em;color:var(--muted);margin-left:6px}
+.meta{font:500 13px/1.4 var(--f-mono);color:var(--muted)}
+.status{font:600 13px/1 var(--f-mono);padding:6px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+
+/* SVG parts */
+.s-glass{fill:none;stroke:var(--glass);stroke-width:2}
+.s-glassfill{fill:var(--gas);stroke:var(--glass);stroke-width:2}
+.s-water{fill:var(--water)}
+.s-liquid{fill:var(--liquid)}
+.s-tube{fill:none;stroke:var(--glass);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.s-tick{stroke:var(--muted);stroke-width:1}
+.s-lbl{fill:var(--muted);font:500 10px var(--f-mono)}
+.s-lbl-b{fill:var(--ink);font:700 12px var(--f-mono)}
+.s-bubble{fill:var(--gas);stroke:var(--glass);stroke-width:1}
+.s-stopper{fill:var(--muted)}
+.s-mercury{fill:var(--bad)}
+
+.data{display:grid;grid-template-columns:1.1fr 1fr;gap:20px;align-items:start}
+@media (max-width:900px){.data{grid-template-columns:1fr}}
+.row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.tablebox{overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font:700 12px/1.2 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--panel);position:sticky;top:0}
+td.num{font-family:var(--f-mono)}
+tbody tr:last-child td{border-bottom:0}
+tr.fresh td{background:var(--accent-soft)}
+.x{background:none;border:0;color:var(--muted);cursor:pointer;font:600 16px var(--f-mono);padding:2px 6px}
+.x:hover{color:var(--bad)}
+.empty{padding:24px;text-align:center;color:var(--muted)}
+.charts{display:grid;gap:18px}
+.chart svg{width:100%;height:auto;display:block}
+.c-axis{stroke:var(--muted);stroke-width:1}
+.c-grid{stroke:var(--line);stroke-width:1}
+.c-lbl{fill:var(--muted);font:500 11px var(--f-mono)}
+.c-title{fill:var(--ink);font:600 12px var(--f-body)}
+.c-pt{fill:var(--accent);fill-opacity:.35;stroke:var(--accent);stroke-width:1}
+.c-mean{fill:var(--accent)}
+.c-line{fill:none;stroke:var(--accent);stroke-width:2}
+.legend{font:500 12px var(--f-mono);color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px;background:var(--accent)}
+.legend span.trial::before{opacity:.35}
+.confirm{display:flex;gap:8px;align-items:center;font-size:14px}
+.toast{font:600 13px var(--f-mono);color:var(--accent)}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Virtual Lab · Enzymes</div>
+    <h1>Catalase Activity Simulator</h1>
+    <p class="lede">Catalase from potato tissue breaks hydrogen peroxide into water and oxygen gas. Choose a water-bath temperature and a buffer pH, run a trial, and record how much oxygen collects in the inverted cylinder in 60 seconds. Results vary from trial to trial, just as they would at a real bench, so run each condition at least three times.</p>
+    <div class="eq">2 H₂O₂ → 2 H₂O + O₂ (g)</div>
+  </header>
+
+  <section class="bench">
+    <div class="panel" aria-label="Experiment controls">
+      <div class="ctrl">
+        <div class="ctrl-head"><h3>Water bath</h3><span class="ctrl-val" id="tVal">37 °C</span></div>
+        <div class="chips" id="tempChips" role="group" aria-label="Temperature"></div>
+      </div>
+      <div class="ctrl">
+        <div class="ctrl-head"><h3>Buffer pH</h3><span class="ctrl-val" id="pVal">7</span></div>
+        <div class="chips" id="phChips" role="group" aria-label="pH"></div>
+      </div>
+      <button class="btn" id="runBtn" type="button">Run trial (60 s)</button>
+      <p class="note" id="repNote">This condition: 0 trials recorded.</p>
+      <div class="fixed">
+        <span>Held constant every trial:</span>
+        <span>2.0 mL potato extract</span>
+        <span>2.0 mL buffer</span>
+        <span>5.0 mL 3% H₂O₂</span>
+        <span>5 min equilibration in bath</span>
+      </div>
+    </div>
+
+    <div class="panel rig">
+      <svg id="rig" viewBox="0 0 540 300" role="img" aria-label="Apparatus: flask in water bath connected by tubing to an inverted graduated cylinder in a water trough">
+        <!-- water bath -->
+        <rect x="20" y="128" width="220" height="150" rx="6" class="s-water"/>
+        <rect x="20" y="128" width="220" height="150" rx="6" id="bathTint" fill="var(--heat)" fill-opacity="0"/>
+        <rect x="20" y="120" width="220" height="158" rx="6" class="s-glass"/>
+        <text x="30" y="292" class="s-lbl">WATER BATH</text>
+        <!-- thermometer -->
+        <rect x="206" y="40" width="10" height="200" rx="5" class="s-glassfill"/>
+        <circle cx="211" cy="244" r="9" class="s-mercury"/>
+        <rect x="208" y="200" width="6" height="44" class="s-mercury" id="merc"/>
+        <text x="222" y="56" class="s-lbl-b" id="thermoLbl">37°</text>
+        <!-- flask -->
+        <path id="flaskLiquid" d="M86 222 L174 222 L188 262 Q188 268 182 268 L78 268 Q72 268 72 262 Z" class="s-liquid"/>
+        <g id="flaskBubbles"></g>
+        <path d="M115 106 L115 150 L72 262 Q72 268 78 268 L182 268 Q188 268 188 262 L145 150 L145 106" class="s-glass"/>
+        <rect x="110" y="94" width="40" height="16" rx="3" class="s-stopper"/>
+        <text x="130" y="248" text-anchor="middle" class="s-lbl" id="flaskLbl">pH 7 buffer</text>
+        <!-- delivery tube -->
+        <path d="M130 94 L130 28 L300 28 L300 284 L404 284 L404 262" class="s-tube"/>
+        <!-- trough -->
+        <rect x="330" y="176" width="190" height="112" rx="4" class="s-water"/>
+        <path d="M330 168 L330 288 L520 288 L520 168" class="s-glass"/>
+        <text x="420" y="300" text-anchor="middle" class="s-lbl">TROUGH</text>
+        <!-- cylinder (inverted) -->
+        <rect x="384" y="36" width="40" height="230" class="s-water"/>
+        <rect x="384" y="36" width="40" height="0" id="gas" fill="var(--gas)"/>
+        <g id="cylBubbles"></g>
+        <path d="M384 266 L384 36 Q384 30 390 30 L418 30 Q424 30 424 36 L424 266" class="s-glass"/>
+        <g id="ticks"></g>
+        <text x="404" y="20" text-anchor="middle" class="s-lbl">mL O₂</text>
+        <!-- timer -->
+        <text x="30" y="40" class="s-lbl">TIMER</text>
+        <text x="30" y="66" class="s-lbl-b" id="timer" style="font-size:24px">00 s</text>
+      </svg>
+      <div class="readout">
+        <div>
+          <div class="meta" id="lastMeta">Set conditions, then run a trial.</div>
+          <div class="big" id="lastVal" aria-live="polite">— <small>mL O₂</small></div>
+        </div>
+        <span class="status" id="status">Ready</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="data">
+    <div class="panel">
+      <div class="row">
+        <h2>Data table</h2>
+        <div class="actions">
+          <button class="btn ghost" id="copyBtn" type="button">Copy data</button>
+          <button class="btn danger" id="clearBtn" type="button">Clear all</button>
+        </div>
+      </div>
+      <div class="confirm" id="confirmBox" hidden>
+        <span>Delete every trial?</span>
+        <button class="btn danger" id="confirmYes" type="button">Delete</button>
+        <button class="btn ghost" id="confirmNo" type="button">Keep</button>
+      </div>
+      <span class="toast" id="toast" hidden></span>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>Trial</th><th>Temp (°C)</th><th>pH</th><th>O₂ in 60 s (mL)</th><th><span class="sr">&nbsp;</span></th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <h3>Averages by condition</h3>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>Temp (°C)</th><th>pH</th><th>Trials</th><th>Mean O₂ (mL)</th><th>Range (mL)</th></tr></thead>
+          <tbody id="sbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel charts">
+      <h2>Graphs</h2>
+      <div class="legend"><span class="trial">single trial</span><span>condition mean</span></div>
+      <div class="chart"><svg id="chartT" viewBox="0 0 380 230" role="img" aria-label="Oxygen produced versus temperature at pH 7"></svg></div>
+      <div class="chart"><svg id="chartP" viewBox="0 0 380 230" role="img" aria-label="Oxygen produced versus pH at 37 degrees Celsius"></svg></div>
+      <p class="note">The temperature graph plots trials run at pH 7. The pH graph plots trials run at 37 °C. Trials at other combinations still appear in the tables.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  const TEMPS=[0,10,20,30,37,45,55,70];
+  const PHS=[3,4,5,6,7,8,9,10,11];
+  const VMAX=26;       // mL O2 in 60 s at optimum
+  const CYL=50;        // cylinder capacity (mL)
+  const KEY="catalase-sim-trials-v1";
+  let temp=37, ph=7, running=false, trials=[];
+  try{ trials=JSON.parse(localStorage.getItem(KEY)||"[]")||[]; }catch(e){ trials=[]; }
+  const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(trials)); }catch(e){} };
+  const $=id=>document.getElementById(id);
+  const NS="http://www.w3.org/2000/svg";
+  const el=(tag,attrs,parent)=>{const n=document.createElementNS(NS,tag);for(const k in attrs)n.setAttribute(k,attrs[k]);if(parent)parent.appendChild(n);return n;};
+
+  // ---------- enzyme model ----------
+  function fT(T){ return T<=37 ? Math.exp(-Math.pow((T-37)/25,2)) : Math.exp(-Math.pow((T-37)/13,2)); }
+  function fpH(p){ return Math.exp(-Math.pow((p-7)/2.2,2)); }
+  function gauss(){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+  function simulate(T,p){
+    let v = VMAX*fT(T)*fpH(p);
+    v *= 1 + 0.08*gauss();          // biological / pipetting variation
+    v += 0.25 + 0.3*gauss();        // slow non-enzymatic breakdown + reading error
+    if(Math.random()<0.05) v *= 0.72 + Math.random()*0.13; // occasional leaky stopper
+    v = Math.max(0, Math.min(CYL, v));
+    return Math.round(v*10)/10;
+  }
+
+  // ---------- controls ----------
+  function chips(container, values, fmt, get, set){
+    values.forEach(v=>{
+      const b=document.createElement("button");
+      b.type="button"; b.className="chip"; b.textContent=fmt(v); b.id=container.id+"-"+v;
+      b.setAttribute("aria-pressed", String(v===get()));
+      b.addEventListener("click",()=>{ if(running)return; set(v); container.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed","false")); b.setAttribute("aria-pressed","true"); updateSetup(); });
+      container.appendChild(b);
+    });
+  }
+  chips($("tempChips"),TEMPS,v=>v+"°",()=>temp,v=>temp=v);
+  chips($("phChips"),PHS,v=>String(v),()=>ph,v=>ph=v);
+
+  // cylinder ticks: 0 mL at top (y=36), 50 mL at y=236 → 4 px per mL
+  const Y0=36, PX=4;
+  for(let m=0;m<=CYL;m+=5){
+    const y=Y0+m*PX, major=m%10===0;
+    el("line",{x1:424,x2:major?436:431,y1:y,y2:y,class:"s-tick"},$("ticks"));
+    if(major) el("text",{x:440,y:y+3.5,class:"s-lbl"},$("ticks")).textContent=m;
+  }
+
+  function updateSetup(){
+    $("tVal").textContent=temp+" °C"; $("pVal").textContent=ph;
+    $("thermoLbl").textContent=temp+"°";
+    const h=Math.max(4, temp/70*190); $("merc").setAttribute("y",244-h); $("merc").setAttribute("height",h);
+    const tint=$("bathTint");
+    if(temp>=25){ tint.setAttribute("fill","var(--heat)"); tint.setAttribute("fill-opacity",((temp-25)/45*0.55).toFixed(2)); }
+    else { tint.setAttribute("fill","var(--cold)"); tint.setAttribute("fill-opacity",((25-temp)/25*0.45).toFixed(2)); }
+    $("flaskLbl").textContent="pH "+ph+" buffer";
+    const n=trials.filter(t=>t.T===temp&&t.pH===ph).length;
+    $("repNote").textContent="This condition ("+temp+" °C, pH "+ph+"): "+n+" trial"+(n===1?"":"s")+" recorded."+(n<3?" Aim for 3.":"");
+  }
+
+  // ---------- animation ----------
+  function setGas(ml){ $("gas").setAttribute("height",Math.max(0,ml*PX)); }
+  function bubble(group,x,y,r,rise,dur){
+    const c=el("circle",{cx:x,cy:y,r:r,class:"s-bubble"},group);
+    const start=performance.now();
+    (function step(now){ const k=(now-start)/dur; if(k>=1){c.remove();return;} c.setAttribute("cy",y-rise*k); c.setAttribute("cx",x+Math.sin(k*9+x)*2); requestAnimationFrame(step); })(start);
+  }
+  function run(){
+    if(running) return;
+    running=true; $("runBtn").disabled=true; $("status").textContent="Collecting gas…";
+    const result=simulate(temp,ph);
+    const dur=matchMedia("(prefers-reduced-motion: reduce)").matches?300:5000;
+    const rate=result/VMAX; const start=performance.now(); let lastB=0;
+    setGas(0);
+    function frame(now){
+      const k=Math.min(1,(now-start)/dur);
+      const shape=(1-Math.exp(-2.2*k))/(1-Math.exp(-2.2)); // reaction slows as H2O2 is used up
+      setGas(result*shape);
+      $("timer").textContent=String(Math.round(k*60)).padStart(2,"0")+" s";
+      $("lastVal").innerHTML=(result*shape).toFixed(1)+" <small>mL O₂</small>";
+      const gap=rate>0.02? 260/(rate*(1-k*0.6)+0.05) : 1e9;
+      if(now-lastB>gap && k<1){
+        lastB=now;
+        bubble($("flaskBubbles"),90+Math.random()*80,264,2+Math.random()*2.5,40+Math.random()*10,900);
+        bubble($("cylBubbles"),396+Math.random()*16,262,2+Math.random()*2,Math.max(8,262-(Y0+result*shape*PX)-4),700);
+      }
+      if(k<1) requestAnimationFrame(frame); else finish(result);
+    }
+    requestAnimationFrame(frame);
+  }
+  function finish(result){
+    trials.push({n:(trials.reduce((m,t)=>Math.max(m,t.n),0)+1),T:temp,pH:ph,v:result});
+    save(); running=false; $("runBtn").disabled=false; $("status").textContent="Trial recorded";
+    $("lastVal").innerHTML=result.toFixed(1)+" <small>mL O₂</small>";
+    $("lastMeta").textContent="Trial "+trials[trials.length-1].n+" · "+temp+" °C · pH "+ph+" · read at 60 s";
+    render(true); updateSetup();
+  }
+  $("runBtn").addEventListener("click",run);
+
+  // ---------- tables ----------
+  function render(fresh){
+    const tb=$("tbody"); tb.innerHTML="";
+    if(!trials.length){ tb.innerHTML='<tr><td colspan="5" class="empty">No trials yet. Pick a temperature and pH, then press Run trial.</td></tr>'; }
+    trials.forEach((t,i)=>{
+      const tr=document.createElement("tr"); if(fresh&&i===trials.length-1) tr.className="fresh";
+      tr.innerHTML='<td class="num">'+t.n+'</td><td class="num">'+t.T+'</td><td class="num">'+t.pH+'</td><td class="num">'+t.v.toFixed(1)+'</td><td><button class="x" type="button" aria-label="Delete trial '+t.n+'">×</button></td>';
+      tr.querySelector("button").addEventListener("click",()=>{ trials=trials.filter(x=>x!==t); save(); render(false); updateSetup(); });
+      tb.appendChild(tr);
+    });
+    tb.parentElement.parentElement.scrollTop=tb.parentElement.parentElement.scrollHeight;
+    const groups=summary();
+    const sb=$("sbody"); sb.innerHTML="";
+    if(!groups.length) sb.innerHTML='<tr><td colspan="5" class="empty">Averages appear after your first trial.</td></tr>';
+    groups.forEach(g=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML='<td class="num">'+g.T+'</td><td class="num">'+g.pH+'</td><td class="num">'+g.vals.length+'</td><td class="num">'+g.mean.toFixed(1)+'</td><td class="num">'+g.min.toFixed(1)+' – '+g.max.toFixed(1)+'</td>';
+      sb.appendChild(tr);
+    });
+    chart($("chartT"),trials.filter(t=>t.pH===7).map(t=>({x:t.T,y:t.v})),0,70,[0,10,20,30,37,45,55,70],"Temperature (°C)","O₂ vs temperature (pH 7)");
+    chart($("chartP"),trials.filter(t=>t.T===37).map(t=>({x:t.pH,y:t.v})),3,11,PHS,"pH","O₂ vs pH (37 °C)");
+  }
+  function summary(){
+    const m=new Map();
+    trials.forEach(t=>{const k=t.T+"|"+t.pH; if(!m.has(k)) m.set(k,{T:t.T,pH:t.pH,vals:[]}); m.get(k).vals.push(t.v);});
+    return [...m.values()].map(g=>({...g,mean:g.vals.reduce((a,b)=>a+b,0)/g.vals.length,min:Math.min(...g.vals),max:Math.max(...g.vals)})).sort((a,b)=>a.T-b.T||a.pH-b.pH);
+  }
+
+  // ---------- charts ----------
+  function chart(svg,pts,xmin,xmax,xticks,xlabel,title){
+    svg.innerHTML="";
+    const L=46,R=366,T=26,B=186;
+    const ymax=Math.max(30,Math.ceil(Math.max(0,...pts.map(p=>p.y))/5)*5);
+    const sx=x=>L+(x-xmin)/(xmax-xmin)*(R-L), sy=y=>B-y/ymax*(B-T);
+    el("text",{x:L,y:14,class:"c-title"},svg).textContent=title;
+    for(let y=0;y<=ymax;y+=5){
+      el("line",{x1:L,x2:R,y1:sy(y),y2:sy(y),class:"c-grid"},svg);
+      el("text",{x:L-8,y:sy(y)+4,"text-anchor":"end",class:"c-lbl"},svg).textContent=y;
+    }
+    el("line",{x1:L,x2:R,y1:B,y2:B,class:"c-axis"},svg);
+    el("line",{x1:L,x2:L,y1:T,y2:B,class:"c-axis"},svg);
+    xticks.forEach(x=>{ el("line",{x1:sx(x),x2:sx(x),y1:B,y2:B+4,class:"c-axis"},svg); el("text",{x:sx(x),y:B+17,"text-anchor":"middle",class:"c-lbl"},svg).textContent=x; });
+    el("text",{x:(L+R)/2,y:B+36,"text-anchor":"middle",class:"c-lbl"},svg).textContent=xlabel;
+    const yl=el("text",{x:14,y:(T+B)/2,"text-anchor":"middle",class:"c-lbl",transform:"rotate(-90 14 "+((T+B)/2)+")"},svg); yl.textContent="O₂ (mL)";
+    if(!pts.length){ el("text",{x:(L+R)/2,y:(T+B)/2,"text-anchor":"middle",class:"c-lbl"},svg).textContent="No trials at this setting yet"; return; }
+    const by=new Map(); pts.forEach(p=>{ if(!by.has(p.x)) by.set(p.x,[]); by.get(p.x).push(p.y); });
+    const means=[...by.entries()].map(([x,v])=>({x,y:v.reduce((a,b)=>a+b,0)/v.length})).sort((a,b)=>a.x-b.x);
+    if(means.length>1) el("path",{d:means.map((p,i)=>(i?"L":"M")+sx(p.x)+" "+sy(p.y)).join(" "),class:"c-line"},svg);
+    pts.forEach(p=>el("circle",{cx:sx(p.x)+(Math.random()-.5)*4,cy:sy(p.y),r:3.5,class:"c-pt"},svg));
+    means.forEach(p=>el("circle",{cx:sx(p.x),cy:sy(p.y),r:4.5,class:"c-mean"},svg));
+  }
+
+  // ---------- copy / clear ----------
+  function toast(msg){ const t=$("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,2500); }
+  $("copyBtn").addEventListener("click",()=>{
+    const text="Trial\tTemp (C)\tpH\tO2 in 60 s (mL)\n"+trials.map(t=>[t.n,t.T,t.pH,t.v.toFixed(1)].join("\t")).join("\n");
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(()=>toast("Copied. Paste into a spreadsheet."),()=>toast("Copy was blocked. Select the table and copy it by hand."));
+    } else toast("Copy was blocked. Select the table and copy it by hand.");
+  });
+  $("clearBtn").addEventListener("click",()=>{ $("confirmBox").hidden=false; });
+  $("confirmNo").addEventListener("click",()=>{ $("confirmBox").hidden=true; });
+  $("confirmYes").addEventListener("click",()=>{ trials=[]; save(); $("confirmBox").hidden=true; render(false); updateSetup(); setGas(0); $("lastVal").innerHTML='— <small>mL O₂</small>'; $("lastMeta").textContent="Set conditions, then run a trial."; $("status").textContent="Ready"; toast("All trials deleted."); });
+
+  updateSetup(); render(false);
+})();
+</script>
+
+</body>
+</html>
