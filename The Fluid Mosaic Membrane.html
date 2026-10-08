@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Fluid Mosaic Membrane</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: sticky lesson rail on the left (desktop) with a pacing track; one long reading column of 8 timed stations. Bilayer colors (phosphate head teal, lipid tail gold) carry through every diagram. */
+:root{
+  --bg:#eef5f4; --surface:#ffffff; --sunk:#e3eeec; --ink:#12292b; --muted:#4b6567; --line:#c9dbd9;
+  --head:#1f8a83; --tail:#c99410; --protein:#6a4fb0; --carb:#c03f78; --chol:#8a6420;
+  --accent:#0d6b66; --accent-ink:#ffffff; --good:#2e7d32; --bad:#b3261e; --warn:#a15c00;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c1819; --surface:#132426; --sunk:#0f1e20; --ink:#e2efee; --muted:#9bb4b3; --line:#25393b;
+  --head:#4cc0b7; --tail:#e6b83f; --protein:#a48ef0; --carb:#ec7cab; --chol:#d3a75a;
+  --accent:#5ccfc6; --accent-ink:#06201f; --good:#7fd283; --bad:#ff8a80; --warn:#f2b860; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1819; --surface:#132426; --sunk:#0f1e20; --ink:#e2efee; --muted:#9bb4b3; --line:#25393b;
+  --head:#4cc0b7; --tail:#e6b83f; --protein:#a48ef0; --carb:#ec7cab; --chol:#d3a75a;
+  --accent:#5ccfc6; --accent-ink:#06201f; --good:#7fd283; --bad:#ff8a80; --warn:#f2b860; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;padding-inline:16px}
+.shell{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:32px;padding-block:28px 80px}
+@media (min-width:980px){.shell{grid-template-columns:230px minmax(0,1fr)}}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(2.1rem,5vw,3.4rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.5rem,3vw,2rem);font-weight:800;letter-spacing:-.01em}
+h3{font-size:1.15rem;font-weight:600}
+p{margin:0}
+.label{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+a{color:var(--accent)}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+/* rail */
+.rail{position:relative}
+@media (min-width:980px){.rail-inner{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px)}}
+.rail-inner{display:flex;flex-direction:column;gap:14px}
+.rail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+@media (max-width:979px){.rail ol{flex-direction:row;flex-wrap:wrap;gap:6px}.rail ol li a{padding:4px 10px;border:1px solid var(--line);border-radius:99px}.rail ol li a .t{display:none}}
+.rail ol a{display:flex;gap:10px;align-items:baseline;text-decoration:none;color:var(--ink);padding:6px 8px;border-radius:8px;font-size:.93rem}
+.rail ol a:hover{background:var(--sunk)}
+.rail .n{font-family:var(--mono);font-size:.72rem;color:var(--muted);min-width:1.6em}
+.rail .t{margin-left:auto;font-family:var(--mono);font-size:.7rem;color:var(--muted)}
+.rail li.done a .n{color:var(--good)}
+.rail li.done a .n::before{content:"✓ "}
+.track{height:8px;border-radius:99px;background:var(--sunk);overflow:hidden;border:1px solid var(--line)}
+.track i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--head),var(--tail));transition:width .4s}
+
+main{display:flex;flex-direction:column;gap:56px;min-width:0}
+section.station{display:flex;flex-direction:column;gap:18px;scroll-margin-top:20px}
+.station-head{display:flex;flex-direction:column;gap:6px;border-top:2px solid var(--ink);padding-top:14px}
+.station-head .meta{display:flex;gap:14px;flex-wrap:wrap}
+.prose{max-width:68ch;display:flex;flex-direction:column;gap:12px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.do{border-left:5px solid var(--tail)}
+.do > .label{color:var(--warn)}
+.key{background:var(--sunk);border:1px dashed var(--line);border-radius:var(--r);padding:14px 18px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+textarea,input[type=text]{width:100%;font:inherit;font-size:1rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+textarea{min-height:92px;resize:vertical}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:10px 16px;font-weight:700}
+.btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.check{display:inline-flex;gap:10px;align-items:center;font-weight:700;align-self:flex-start;background:var(--sunk);border:1.5px solid var(--line);color:var(--ink);border-radius:99px;padding:8px 16px}
+.check[aria-pressed="true"]{border-color:var(--good);color:var(--good)}
+.check[aria-pressed="true"]::before{content:"✓"}
+.check[aria-pressed="false"]::before{content:"○"}
+
+/* hero */
+.hero{display:flex;flex-direction:column;gap:18px}
+.hero p.lede{font-size:1.2rem;max-width:58ch;color:var(--muted)}
+.hero-bilayer{width:100%;height:auto;max-width:100%}
+.objectives{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+
+/* membrane explorer */
+.explorer{display:grid;grid-template-columns:1fr;gap:16px}
+@media (min-width:1100px){.explorer{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
+.svgwrap{overflow-x:auto;background:var(--sunk);border-radius:var(--r);border:1px solid var(--line)}
+.svgwrap svg{display:block;min-width:640px;width:100%;height:auto}
+svg text{font-family:var(--mono);font-size:12px;fill:var(--muted)}
+.part{cursor:pointer;transition:opacity .2s}
+.part:hover,.part:focus{opacity:.75}
+.part.seen .tagdot{fill:var(--good)}
+.info h3{color:var(--accent)}
+.info dl{margin:0;display:flex;flex-direction:column;gap:8px}
+.info dt{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.info dd{margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.82rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:4px 10px}
+.chip.on{border-color:var(--good);color:var(--good)}
+
+/* timeline */
+.timeline{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0}
+.timeline li{display:grid;grid-template-columns:70px 1fr;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
+.timeline .yr{font-family:var(--mono);font-weight:500;color:var(--accent)}
+
+/* sim */
+.simrow{display:grid;grid-template-columns:1fr;gap:16px;align-items:center}
+@media (min-width:720px){.simrow{grid-template-columns:260px minmax(0,1fr)}}
+.controls{display:flex;flex-direction:column;gap:14px}
+.ctl label{display:flex;justify-content:space-between;font-weight:700;font-size:.95rem}
+.ctl output{font-family:var(--mono);font-weight:500;color:var(--accent)}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl small{color:var(--muted);font-size:.82rem}
+canvas{width:100%;display:block;border-radius:var(--r);background:var(--sunk);border:1px solid var(--line)}
+.meter{position:relative;height:30px;border-radius:8px;overflow:hidden;display:grid;grid-template-columns:30fr 48fr 22fr;font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em}
+.meter span{display:flex;align-items:center;justify-content:center;color:var(--ink);text-align:center;padding:0 4px}
+.meter .z1{background:color-mix(in srgb,var(--protein) 28%,transparent)}
+.meter .z2{background:color-mix(in srgb,var(--good) 26%,transparent)}
+.meter .z3{background:color-mix(in srgb,var(--bad) 26%,transparent)}
+.meter .pin{position:absolute;top:0;bottom:0;width:4px;margin-left:-2px;background:var(--ink);border-radius:2px;transition:left .25s}
+.state{font-weight:700}
+.challenges{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.challenges li{display:flex;gap:10px;align-items:flex-start}
+.challenges li::before{content:"○";font-weight:700;color:var(--muted)}
+.challenges li.ok::before{content:"✓";color:var(--good)}
+
+/* sort */
+.molecules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:12px}
+.mol{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.mol .nm{font-weight:700;font-size:1.05rem}
+.mol .fx{font-family:var(--mono);font-size:.8rem;color:var(--muted)}
+.mol .opts{display:flex;gap:6px;flex-wrap:wrap}
+.mol .opts button{flex:1 1 110px;background:var(--sunk);border:1.5px solid var(--line);color:var(--ink);border-radius:8px;padding:7px 8px;font-size:.88rem}
+.mol.right{border-color:var(--good)} .mol.wrong{border-color:var(--bad)}
+.mol .fb{font-size:.9rem}
+.mol.right .fb b{color:var(--good)} .mol.wrong .fb b{color:var(--bad)}
+
+/* properties */
+.props{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px}
+.prop{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:10px}
+.prop h3{display:flex;gap:10px;align-items:center}
+.prop h3 svg{flex:none}
+.prop .cell,.prop .bub{font-size:.95rem}
+.prop .bub{background:var(--sunk);border-radius:8px;padding:10px 12px}
+.caution{border:1.5px solid var(--warn);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.caution .label{color:var(--warn)}
+
+/* quiz */
+.q{display:flex;flex-direction:column;gap:10px;padding:16px 0;border-bottom:1px solid var(--line)}
+.q .stem{font-weight:700}
+.q .choices{display:flex;flex-direction:column;gap:6px}
+.q .choices button{text-align:left;background:var(--surface);border:1.5px solid var(--line);color:var(--ink);border-radius:8px;padding:9px 12px}
+.q .choices button.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--surface))}
+.q .choices button.incorrect{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--surface))}
+.q .why{font-size:.93rem;color:var(--muted)}
+.score{font-family:var(--display);font-size:1.6rem;font-weight:800}
+.submit textarea{min-height:160px;font-family:var(--mono);font-size:.82rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="rail" aria-label="Lesson stations">
+    <div class="rail-inner">
+      <span class="label">Your progress</span>
+      <div class="track" aria-hidden="true"><i id="trackFill"></i></div>
+      <span class="label" id="progressText">0 of 8 stations done</span>
+      <ol id="railList">
+        <li data-s="s0"><a href="#s0"><span class="n">00</span>Start here<span class="t">3m</span></a></li>
+        <li data-s="s1"><a href="#s1"><span class="n">01</span>The puzzle<span class="t">5m</span></a></li>
+        <li data-s="s2"><a href="#s2"><span class="n">02</span>Phospholipids<span class="t">10m</span></a></li>
+        <li data-s="s3"><a href="#s3"><span class="n">03</span>How we know<span class="t">10m</span></a></li>
+        <li data-s="s4"><a href="#s4"><span class="n">04</span>The mosaic<span class="t">15m</span></a></li>
+        <li data-s="s5"><a href="#s5"><span class="n">05</span>Fluidity lab<span class="t">10m</span></a></li>
+        <li data-s="s6"><a href="#s6"><span class="n">06</span>Who gets in?<span class="t">8m</span></a></li>
+        <li data-s="s7"><a href="#s7"><span class="n">07</span>Properties → bubble lab<span class="t">9m</span></a></li>
+        <li data-s="s8"><a href="#s8"><span class="n">08</span>Exit check &amp; submit<span class="t">5m</span></a></li>
+      </ol>
+    </div>
+  </nav>
+
+  <main>
+    <!-- 00 -->
+    <section class="station hero" id="s0">
+      <span class="label">AP Biology · Unit 2 · Cell Structure and Function · ≈75 minutes</span>
+      <h1>The Fluid Mosaic Membrane</h1>
+      <svg class="hero-bilayer" viewBox="0 0 900 120" id="heroSvg" role="img" aria-label="A strip of phospholipid bilayer"></svg>
+      <p class="lede">Every cell you own is wrapped in a film about 7–10 nanometers thick, roughly 1/10,000 the width of a hair. Today you will figure out what that film is made of, why it behaves like a liquid, and how it decides what gets in.</p>
+
+      <div class="panel">
+        <span class="label">By the end you should be able to</span>
+        <ol class="objectives">
+          <li>Explain how the amphipathic structure of phospholipids causes a bilayer to form on its own in water. <span class="label">(SYI-1, ENE-2)</span></li>
+          <li>Describe the evidence that led scientists to the fluid mosaic model.</li>
+          <li>Identify membrane components and connect each structure to its function.</li>
+          <li>Predict how temperature, fatty acid saturation, and cholesterol change membrane fluidity.</li>
+          <li>Predict which molecules cross the bilayer directly and which need proteins.</li>
+          <li>Describe membrane properties you will test in the upcoming bubble lab.</li>
+        </ol>
+      </div>
+
+      <div class="panel do">
+        <span class="label">How this lesson works</span>
+        <div class="prose">
+          <p>Work through the stations in order. Each one shows a target time; the whole lesson is about 75 minutes. Every station ends with a <b>Mark station done</b> button so you can track progress.</p>
+          <p>Yellow-edged boxes are <b>tasks</b>. Type your answers right on the page. They save in this browser automatically, so you can close the tab and come back on this same device.</p>
+          <p>At the end, Station 08 collects everything you wrote into one block of text for you to copy and submit the way your teacher asked.</p>
+        </div>
+        <label for="studentName"><b>Your name and class period</b></label>
+        <input type="text" id="studentName" data-save placeholder="e.g. Jordan Lee, Period 3">
+      </div>
+      <button class="check" data-done="s0" aria-pressed="false">Mark station done</button>
+    </section>
+
+    <!-- 01 -->
+    <section class="station" id="s1">
+      <div class="station-head"><span class="label">Station 01 · ≈5 min</span><h2>The puzzle: a wall that flows</h2></div>
+      <div class="prose">
+        <p>Think about a soap bubble. You can push a wet finger straight through it and pull it back out, and the bubble survives. Poke it with a dry finger and it pops instantly.</p>
+        <p>Your cell membranes do something similar. A researcher can push a fine glass needle into a cell to inject DNA, pull it out, and the hole closes on its own. A white blood cell can squeeze through a gap smaller than itself. Yet the same membrane keeps ions like Na<sup>+</sup> out so reliably that your neurons depend on it.</p>
+        <p>So the membrane is a barrier that is also flexible, self-healing, and constantly moving. Hold on to that tension. The rest of the lesson explains it.</p>
+      </div>
+      <div class="panel do">
+        <span class="label">Task 1 · Predict before you learn</span>
+        <label for="t1"><b>What do you think a membrane needs to be made of to act like both a wall and a liquid? Make a guess, even if it is wrong.</b></label>
+        <textarea id="t1" data-save data-label="Task 1 – Initial prediction"></textarea>
+      </div>
+      <button class="check" data-done="s1" aria-pressed="false">Mark station done</button>
+    </section>
+
+    <!-- 02 -->
+    <section class="station" id="s2">
+      <div class="station-head"><span class="label">Station 02 · ≈10 min</span><h2>Phospholipids: molecules with split personalities</h2></div>
+      <div class="grid2">
+        <div class="prose">
+          <p>The main building block of the membrane is the <b>phospholipid</b>. It has two very different ends:</p>
+          <p><b style="color:var(--head)">Hydrophilic head.</b> A glycerol backbone attached to a negatively charged phosphate group (often with another small polar group). It is polar, so it forms hydrogen bonds and ionic interactions with water.</p>
+          <p><b style="color:var(--tail)">Hydrophobic tails.</b> Two long fatty acid chains made almost entirely of C–H bonds. They are nonpolar and cannot interact favorably with water.</p>
+          <p>A molecule with both a polar and a nonpolar region is <b>amphipathic</b>. When you drop amphipathic molecules into water, the water molecules push the tails together (the hydrophobic effect). The most stable arrangement is a <b>bilayer</b>: heads face water on both sides, tails hide in the middle. No enzyme or energy input builds it. It assembles itself.</p>
+        </div>
+        <div class="panel">
+          <span class="label">One phospholipid, up close</span>
+          <svg viewBox="0 0 300 260" role="img" aria-label="Diagram of a phospholipid: polar head on top, two fatty acid tails below, one tail kinked by a double bond">
+            <circle cx="120" cy="50" r="30" fill="var(--head)"/>
+            <text x="160" y="40">phosphate +</text><text x="160" y="56">glycerol head</text><text x="160" y="72" style="fill:var(--head)">polar · hydrophilic</text>
+            <path d="M108 80 V230" stroke="var(--tail)" stroke-width="8" stroke-linecap="round" fill="none"/>
+            <path d="M132 80 V140 L152 165 V230" stroke="var(--tail)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <text x="170" y="150">kink = C=C</text><text x="170" y="166">double bond</text>
+            <text x="170" y="205" style="fill:var(--tail)">nonpolar tails</text><text x="170" y="221" style="fill:var(--tail)">hydrophobic</text>
+            <text x="10" y="252">saturated · unsaturated</text>
+          </svg>
+        </div>
+      </div>
+      <div class="key"><p><b>Saturated vs. unsaturated tails.</b> A saturated fatty acid has only single C–C bonds, so it is straight and packs tightly against its neighbors. An unsaturated fatty acid has at least one cis C=C double bond, which puts a kink in the chain. Kinks keep tails from packing tightly. You will use this idea in Station 05.</p></div>
+      <div class="panel do">
+        <span class="label">Task 2 · Explain the shape</span>
+        <label for="t2a"><b>a) In your own words, why do the tails end up in the middle of the bilayer instead of facing the water?</b></label>
+        <textarea id="t2a" data-save data-label="Task 2a – Why tails face inward"></textarea>
+        <label for="t2b"><b>b) If you put phospholipids in oil instead of water, how would you predict they would arrange themselves? Explain.</b></label>
+        <textarea id="t2b" data-save data-label="Task 2b – Phospholipids in oil"></textarea>
+        <details><summary>Check your thinking after you write</summary><p style="margin-top:8px">In oil the nonpolar tails are now the ones that mix well with the solvent. The heads would cluster together away from the oil, an "inside-out" arrangement (a reverse micelle). Same principle: like interacts with like.</p></details>
+      </div>
+      <button class="check" data-done="s2" aria-pressed="false">Mark station done</button>
+    </section>
+
+    <!-- 03 -->
+    <section class="station" id="s3">
+      <div class="station-head"><span class="label">Station 03 · ≈10 min</span><h2>How we know: evidence that built the model</h2></div>
+      <div class="prose"><p>Nobody can see a membrane with a light microscope. The model came from decades of indirect evidence, and it changed when new evidence did not fit. Read the timeline.</p></div>
+      <ol class="timeline">
+        <li><span class="yr">1925</span><p><b>Gorter &amp; Grendel</b> extracted lipids from red blood cells and spread them in a single layer on water. The layer covered about twice the surface area of the cells. Conclusion: the membrane is a lipid <b>bilayer</b>.</p></li>
+        <li><span class="yr">1935</span><p><b>Davson &amp; Danielli</b> proposed a "sandwich": a bilayer coated on both faces by flat sheets of protein. It explained why membranes were more permeable to water than pure lipid.</p></li>
+        <li><span class="yr">1960s</span><p>Problems appeared. Membrane proteins turned out to be amphipathic and varied, and their hydrophobic regions would be exposed to water in the sandwich. Membranes from different cells had different thicknesses and protein content.</p></li>
+        <li><span class="yr">1960s–70s</span><p><b>Freeze-fracture electron microscopy</b> split membranes down the middle between the two layers. The inner faces were studded with bumps: proteins embedded <i>in</i> the bilayer, not lying on top.</p></li>
+        <li><span class="yr">1970</span><p><b>Frye &amp; Edidin</b> fused a mouse cell with a human cell and tracked their membrane proteins with two colors of fluorescent antibody. Try their experiment below.</p></li>
+        <li><span class="yr">1972</span><p><b>Singer &amp; Nicolson</b> proposed the <b>fluid mosaic model</b>: proteins embedded in and drifting through a fluid lipid bilayer. It is still the accepted model today.</p></li>
+      </ol>
+      <div class="panel">
+        <span class="label">Simulation · Frye &amp; Edidin cell fusion</span>
+        <div class="simrow">
+          <div class="controls">
+            <p>Mouse proteins are tagged <b style="color:var(--head)">teal</b>, human proteins <b style="color:var(--carb)">pink</b>. Run the fusion at each temperature and watch the 40 minutes after fusion.</p>
+            <button class="btn" id="fuse37">Fuse at 37 °C</button>
+            <button class="btn ghost" id="fuse15">Fuse at 15 °C</button>
+            <span class="label" id="fuseClock">Time after fusion: 0 min</span>
+          </div>
+          <svg viewBox="0 0 320 240" id="fuseSvg" role="img" aria-label="Hybrid cell with fluorescent membrane proteins"></svg>
+        </div>
+      </div>
+      <div class="panel do">
+        <span class="label">Task 3 · Use the evidence</span>
+        <label for="t3a"><b>a) What happened to the proteins at 37 °C compared with 15 °C?</b></label>
+        <textarea id="t3a" data-save data-label="Task 3a – Fusion results"></textarea>
+        <label for="t3b"><b>b) Which word in "fluid mosaic" does this experiment support, and why would the Davson–Danielli sandwich struggle to explain it?</b></label>
+        <textarea id="t3b" data-save data-label="Task 3b – Evidence for the model"></textarea>
+      </div>
+      <button class="check" data-done="s3" aria-pressed="false">Mark station done</button>
+    </section>
+
+    <!-- 04 -->
+    <section class="station" id="s4">
+      <div class="station-head"><span class="label">Station 04 · ≈15 min</span><h2>The mosaic: explore every piece</h2></div>
+      <div class="prose"><p>A mosaic is a picture made of many different tiles. The membrane is a mosaic of lipids, proteins, and carbohydrates. Click (or tab to and press Enter on) each labeled component. Explore all seven, then complete the task.</p></div>
+      <div class="explorer">
+        <div class="svgwrap"><svg viewBox="0 0 900 380" id="memSvg" role="group" aria-label="Interactive cross-section of a plasma membrane"></svg></div>
+        <div class="panel info" id="info" aria-live="polite">
+          <span class="label">Component</span>
+          <h3>Select a component in the diagram</h3>
+          <p>Each one shows its structure, its job, and an AP connection.</p>
+        </div>
+      </div>
+      <div class="chips" id="seenChips"></div>
+      <div class="panel do">
+        <span class="label">Task 4 · Structure ↔ function</span>
+        <label for="t4a"><b>a) Integral proteins span the bilayer. Predict which amino acids (polar or nonpolar R-groups) sit in the part of the protein buried among the fatty acid tails. Explain.</b></label>
+        <textarea id="t4a" data-save data-label="Task 4a – Integral protein R-groups"></textarea>
+        <label for="t4b"><b>b) Your immune system can tell your cells from a transplanted organ's cells. Which membrane component makes that possible, and where on the cell is it?</b></label>
+        <textarea id="t4b" data-save data-label="Task 4b – Self vs non-self"></textarea>
+      </div>
+      <button class="check" data-done="s4" aria-pressed="false">Mark station done</button>
+    </section>
+
+    <!-- 05 -->
+    <section class="station" id="s5">
+      <div class="station-head"><span class="label">Station 05 · ≈10 min</span><h2>Fluidity lab: tune the membrane</h2></div>
+      <div class="prose">
+        <p>A membrane works only in a middle zone. Too rigid (gel-like) and transport proteins cannot change shape, and the membrane can crack. Too fluid and it becomes leaky and loses its barrier. Cells adjust their membranes to stay in the functional zone.</p>
+        <p>Move the sliders and watch the lipids. This is a simplified, qualitative model: the trends are real, the exact numbers are not.</p>
+      </div>
+      <div class="panel">
+        <div class="simrow">
+          <div class="controls">
+            <div class="ctl"><label for="temp">Temperature <output id="tempOut">37 °C</output></label><input type="range" id="temp" min="0" max="45" value="37"><small>Heat = more kinetic energy</small></div>
+            <div class="ctl"><label for="unsat">Unsaturated tails <output id="unsatOut">50%</output></label><input type="range" id="unsat" min="0" max="100" value="50"><small>Kinks prevent tight packing</small></div>
+            <div class="ctl"><label for="chol">Cholesterol <output id="cholOut">25%</output></label><input type="range" id="chol" min="0" max="40" value="25"><small>Fluidity buffer</small></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+            <canvas id="lipidCanvas" height="230" aria-label="Animated bilayer showing lipid motion"></canvas>
+            <div class="meter" aria-hidden="true"><span class="z1">Gel · too rigid</span><span class="z2">Functional fluid</span><span class="z3">Leaky</span><i class="pin" id="pin"></i></div>
+            <p>State: <span class="state" id="stateText">Functional fluid</span></p>
+          </div>
+        </div>
+        <div>
+          <span class="label">Challenges (they check themselves)</span>
+          <ul class="challenges" id="challenges">
+            <li data-c="cold">A fish lives in 2 °C Arctic water. Set temperature to 5 °C or lower and get the membrane back to functional.</li>
+            <li data-c="hot">A desert lizard basks at 45 °C. Set temperature to 42 °C or higher and keep it functional.</li>
+            <li data-c="cholboth">Show cholesterol helping at both extremes: functional at ≤5 °C and at ≥42 °C with unsaturation left at 50%.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="key"><p><b>Why cholesterol is a "buffer."</b> At warm temperatures, its rigid ring structure restrains phospholipid movement, lowering fluidity. At cold temperatures, it wedges between phospholipids and keeps them from packing tightly, which keeps the membrane from solidifying.</p></div>
+      <div class="panel do">
+        <span class="label">Task 5 · Claim, evidence, reasoning</span>
+        <label for="t5"><b>Arctic fish membranes contain a higher percentage of unsaturated fatty acids than tropical fish membranes. Explain why this adaptation helps them survive, using what you saw in the model.</b></label>
+        <textarea id="t5" data-save data-label="Task 5 – Arctic fish CER"></textarea>
+      </div>
+      <button class="check" data-done="s5" aria-pressed="false">Mark station done</button>
+    </section>
+
+    <!-- 06 -->
+    <section class="station" id="s6">
+      <div class="station-head"><span class="label">Station 06 · ≈8 min</span><h2>Who gets in? Selective permeability</h2></div>
+      <div class="prose">
+        <p>The hydrophobic core of the bilayer is the gatekeeper. Small, nonpolar molecules dissolve into it and slip across. Ions and large polar molecules cannot get through the oily middle on their own; they need a channel or carrier protein.</p>
+        <p>Sort each molecule. Use two clues: <b>size</b> and <b>polarity/charge</b>.</p>
+      </div>
+      <div class="molecules" id="molecules"></div>
+      <p class="label" id="sortScore">0 of 8 sorted</p>
+      <button class="check" data-done="s6" aria-pressed="false">Mark station done</button>
+    </section>
+
+    <!-- 07 -->
+    <section class="station" id="s7">
+      <div class="station-head"><span class="label">Station 07 · ≈9 min</span><h2>Membrane properties: preview of the bubble lab</h2></div>
+      <div class="prose">
+        <p>A soap film is made of amphipathic soap molecules, so it shares several physical properties with a cell membrane. In the upcoming bubble lab you will collect evidence for each property below. For each one, read what it means in a cell, then write a <b>prediction</b> for what you will observe with bubbles.</p>
+      </div>
+      <div class="props" id="props"></div>
+      <div class="caution">
+        <span class="label">Where the bubble model breaks down</span>
+        <p>A model is useful because it is simpler than the real thing, but you should know its limits:</p>
+        <ul style="margin:0;padding-left:1.2em">
+          <li>A soap film is "inside-out" compared with a cell membrane. Its polar heads face a thin layer of water <i>in the middle</i>, and its nonpolar tails face the air on both sides.</li>
+          <li>Bubbles have no proteins, cholesterol, or carbohydrates, so they cannot model transport, recognition, or signaling.</li>
+          <li>A cell membrane sits in water on both sides; a bubble sits in air.</li>
+        </ul>
+      </div>
+      <div class="panel do">
+        <span class="label">Task 7 · Rank the properties</span>
+        <label for="t7"><b>Which property do you think is most important for a cell to survive? Defend your choice in 2–3 sentences.</b></label>
+        <textarea id="t7" data-save data-label="Task 7 – Most important property"></textarea>
+      </div>
+      <button class="check" data-done="s7" aria-pressed="false">Mark station done</button>
+    </section>
+
+    <!-- 08 -->
+    <section class="station" id="s8">
+      <div class="station-head"><span class="label">Station 08 · ≈5 min</span><h2>Exit check</h2></div>
+      <div class="prose"><p>AP-style questions. Your first click on each question is your answer and counts toward your score, so think before you click.</p></div>
+      <div class="panel" id="quiz"></div>
+      <p class="score" id="quizScore">Score: 0 / 6</p>
+
+      <div class="panel do">
+        <span class="label">Task 8 · Back to the puzzle</span>
+        <label for="t8"><b>Return to your Task 1 prediction. Using the words amphipathic, hydrophobic, and fluid, explain how a membrane can be both a barrier and a flowing, self-healing film.</b></label>
+        <textarea id="t8" data-save data-label="Task 8 – Revisit the puzzle"></textarea>
+      </div>
+
+      <div class="panel submit">
+        <span class="label">Submit your work</span>
+        <p>Press the button to gather your name, every written answer, your sorting results, and your quiz score into the box below. Then copy it and submit it the way your teacher instructed (assignment, email, or form).</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="gather">Gather my answers</button><button class="btn ghost" id="copy">Copy to clipboard</button></div>
+        <span class="label" id="copyMsg" aria-live="polite"></span>
+        <textarea id="summary" readonly aria-label="Your collected answers"></textarea>
+      </div>
+      <button class="check" data-done="s8" aria-pressed="false">Mark station done</button>
+    </section>
+  </main>
+</div>
+
+<script>
+(function(){
+const store={get(k){try{return localStorage.getItem('fm_'+k)}catch(e){return null}},set(k,v){try{localStorage.setItem('fm_'+k,v)}catch(e){}}};
+const NS='http://www.w3.org/2000/svg';
+const el=(t,a={},p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* saved text */
+document.querySelectorAll('[data-save]').forEach(f=>{const v=store.get(f.id);if(v)f.value=v;f.addEventListener('input',()=>store.set(f.id,f.value))});
+
+/* progress */
+const stations=['s0','s1','s2','s3','s4','s5','s6','s7','s8'];
+function refreshProgress(){let n=0;stations.forEach(s=>{const d=store.get('done_'+s)==='1';if(d)n++;
+  document.querySelector(`#railList li[data-s="${s}"]`).classList.toggle('done',d);
+  const b=document.querySelector(`[data-done="${s}"]`);b.setAttribute('aria-pressed',d);b.lastChild.textContent=d?' Station done':'Mark station done';});
+  document.getElementById('trackFill').style.width=(n/stations.length*100)+'%';
+  document.getElementById('progressText').textContent=`${n} of ${stations.length} stations done`;}
+document.querySelectorAll('[data-done]').forEach(b=>{b.textContent='';b.appendChild(document.createTextNode(''));b.addEventListener('click',()=>{const s=b.dataset.done;store.set('done_'+s,store.get('done_'+s)==='1'?'0':'1');refreshProgress()})});
+refreshProgress();
+
+/* hero bilayer strip */
+(function(){const s=document.getElementById('heroSvg');for(let x=10;x<900;x+=22){
+  const k=(x/22|0)%4===1;
+  el('path',{d:`M${x-4} 34 V58`,stroke:'var(--tail)','stroke-width':3,fill:'none','stroke-linecap':'round'},s);
+  el('path',{d:k?`M${x+4} 34 V44 L${x+9} 50 V58`:`M${x+4} 34 V58`,stroke:'var(--tail)','stroke-width':3,fill:'none','stroke-linecap':'round'},s);
+  el('circle',{cx:x,cy:26,r:8,fill:'var(--head)'},s);
+  el('path',{d:`M${x-4} 86 V62`,stroke:'var(--tail)','stroke-width':3,fill:'none','stroke-linecap':'round'},s);
+  el('path',{d:`M${x+4} 86 V62`,stroke:'var(--tail)','stroke-width':3,fill:'none','stroke-linecap':'round'},s);
+  el('circle',{cx:x,cy:94,r:8,fill:'var(--head)'},s);}})();
+
+/* Frye-Edidin */
+(function(){const s=document.getElementById('fuseSvg');const cx=160,cy=120,R=95;
+  el('ellipse',{cx,cy,rx:R+8,ry:R+8,fill:'var(--surface)',stroke:'var(--line)','stroke-width':14},s);
+  el('text',{x:cx,y:cy+4,'text-anchor':'middle'},s).textContent='hybrid cell';
+  let dots=[],timer=null;
+  function reset(){dots.forEach(d=>d.n.remove());dots=[];for(let i=0;i<40;i++){const mouse=i<20;const a=(mouse?0:Math.PI)+Math.random()*Math.PI;
+    dots.push({a,n:el('circle',{r:5,fill:mouse?'var(--head)':'var(--carb)'},s)})}draw()}
+  function draw(){dots.forEach(d=>{d.n.setAttribute('cx',cx+Math.cos(d.a)*R);d.n.setAttribute('cy',cy+Math.sin(d.a)*R)})}
+  function run(temp){clearInterval(timer);reset();let t=0;const step=temp===37?0.16:0.012;const clock=document.getElementById('fuseClock');
+    if(reduce){for(let i=0;i<40;i++)dots.forEach(d=>d.a+=(Math.random()-.5)*step*2.2);draw();clock.textContent=`Time after fusion: 40 min at ${temp} °C`;return}
+    timer=setInterval(()=>{t++;dots.forEach(d=>d.a+=(Math.random()-.5)*step);draw();clock.textContent=`Time after fusion: ${Math.round(t/6)} min at ${temp} °C`;if(t>=240)clearInterval(timer)},40)}
+  reset();document.getElementById('fuse37').onclick=()=>run(37);document.getElementById('fuse15').onclick=()=>run(15);})();
+
+/* membrane explorer */
+const parts={
+  phospholipid:{name:'Phospholipid bilayer',structure:'Two layers of amphipathic phospholipids. Polar heads face the watery fluid outside and the cytoplasm inside; nonpolar fatty acid tails face each other in the core.',func:'Forms the basic barrier. Its hydrophobic core blocks ions and most polar molecules. Individual phospholipids drift sideways within their own layer millions of times per second but rarely flip to the other layer.',ap:'The bilayer forms spontaneously because of the hydrophobic effect, which is why membranes self-assemble and self-seal.'},
+  cholesterol:{name:'Cholesterol',structure:'A steroid: four fused carbon rings with a small polar –OH group. It tucks between phospholipids with its –OH near their heads. Found in animal cell membranes; plants use similar sterols.',func:'Buffers fluidity. It restrains phospholipid movement at high temperature and prevents tight packing at low temperature.',ap:'Expect questions asking you to predict how membrane fluidity changes when cholesterol is added or removed at a given temperature.'},
+  channel:{name:'Channel protein (integral, transmembrane)',structure:'A transmembrane protein with a hydrophilic pore. Its outer surface, which touches the tails, has nonpolar amino acids; the lining of the pore has polar ones.',func:'Lets specific ions or water (through aquaporins) cross by facilitated diffusion, down their concentration gradient with no ATP needed.',ap:'Aquaporins explain why water crosses membranes much faster than the bilayer alone would allow.'},
+  glycoprotein:{name:'Glycoprotein (integral)',structure:'An integral protein with short carbohydrate chains attached to its extracellular side. Polar regions stick out into water on both faces; a nonpolar band sits in the core.',func:'Cell–cell recognition (like ABO blood type and immune "self" markers), receptors for hormones and signals, and anchoring to neighboring cells.',ap:'Carbohydrates are found only on the outside face of the plasma membrane, so the two halves of the bilayer are not identical (membrane asymmetry).'},
+  glycolipid:{name:'Glycolipid',structure:'A lipid with a carbohydrate chain attached to its head, located in the outer layer.',func:'Together with glycoproteins it forms the glycocalyx, a sugar coat used for recognition and protection. Many of your ABO blood type markers are glycolipids.',ap:'Recognition depends on the specific shape of these carbohydrate chains, a structure–function link.'},
+  peripheral:{name:'Peripheral protein',structure:'Not embedded in the bilayer. It binds loosely to the surface of the membrane or to exposed parts of integral proteins, usually on the cytoplasmic side.',func:'Enzymes, signal relay, and attachment points that connect the membrane to the cytoskeleton.',ap:'Peripheral proteins can be removed with a salt wash; integral proteins need detergents that disrupt the bilayer. That difference is evidence for where each protein sits.'},
+  cytoskeleton:{name:'Cytoskeleton filaments',structure:'Protein fibers such as actin microfilaments inside the cell, anchored to membrane proteins.',func:'Hold some membrane proteins in place, maintain cell shape, and let the membrane bend during movement and endocytosis.',ap:'Not every membrane protein drifts freely. Cytoskeleton attachments restrict some, which is why the "mosaic" has regions.'}
+};
+(function(){const s=document.getElementById('memSvg');
+  el('text',{x:16,y:24},s).textContent='EXTRACELLULAR FLUID';
+  el('text',{x:16,y:372},s).textContent='CYTOPLASM';
+  const pl=el('g',{class:'part','data-part':'phospholipid',tabindex:0,role:'button','aria-label':'Phospholipid bilayer'},s);
+  const skipOut=[[168,262],[312,328],[398,492],[552,568]],skipIn=[[168,262],[398,492],[692,708]];
+  const inR=(x,r)=>r.some(([a,b])=>x>=a&&x<=b);
+  for(let x=20,i=0;x<=880;x+=20,i++){const kink=i%3===1;
+    if(!inR(x,skipOut)){el('path',{d:`M${x-3} 138 V178`,stroke:'var(--tail)','stroke-width':2.5,fill:'none'},pl);
+      el('path',{d:kink?`M${x+3} 138 V155 L${x+8} 162 V178`:`M${x+3} 138 V178`,stroke:'var(--tail)','stroke-width':2.5,fill:'none'},pl);
+      el('circle',{cx:x,cy:130,r:8,fill:'var(--head)'},pl)}
+    if(!inR(x,skipIn)){el('path',{d:`M${x-3} 222 V182`,stroke:'var(--tail)','stroke-width':2.5,fill:'none'},pl);
+      el('path',{d:(i%3===2)?`M${x+3} 222 V205 L${x+8} 198 V182`:`M${x+3} 222 V182`,stroke:'var(--tail)','stroke-width':2.5,fill:'none'},pl);
+      el('circle',{cx:x,cy:230,r:8,fill:'var(--head)'},pl)}}
+  // channel
+  const ch=el('g',{class:'part','data-part':'channel',tabindex:0,role:'button','aria-label':'Channel protein'},s);
+  el('rect',{x:176,y:104,width:32,height:152,rx:14,fill:'var(--protein)'},ch);
+  el('rect',{x:222,y:104,width:32,height:152,rx:14,fill:'var(--protein)'},ch);
+  [120,165,210].forEach(y=>el('circle',{cx:215,cy:y,r:4,fill:'var(--head)'},ch));
+  // glycolipid
+  const gl=el('g',{class:'part','data-part':'glycolipid',tabindex:0,role:'button','aria-label':'Glycolipid'},s);
+  el('path',{d:'M317 138 V178 M323 138 V178',stroke:'var(--tail)','stroke-width':2.5,fill:'none'},gl);
+  el('circle',{cx:320,cy:130,r:8,fill:'var(--head)'},gl);
+  [[320,108],[320,90],[310,74],[330,74]].forEach(([x,y])=>el('rect',{x:x-6,y:y-6,width:12,height:12,rx:3,fill:'var(--carb)'},gl));
+  // glycoprotein
+  const gp=el('g',{class:'part','data-part':'glycoprotein',tabindex:0,role:'button','aria-label':'Glycoprotein'},s);
+  el('ellipse',{cx:445,cy:180,rx:46,ry:82,fill:'var(--protein)'},gp);
+  el('path',{d:'M445 98 V60 M445 72 L425 50 M445 72 L465 50',stroke:'var(--carb)','stroke-width':2,fill:'none'},gp);
+  [[445,88],[445,70],[425,50],[465,50],[415,36],[475,36]].forEach(([x,y])=>el('rect',{x:x-6,y:y-6,width:12,height:12,rx:3,fill:'var(--carb)'},gp));
+  // cholesterol x2
+  const co=el('g',{class:'part','data-part':'cholesterol',tabindex:0,role:'button','aria-label':'Cholesterol'},s);
+  [[560,'out'],[700,'in']].forEach(([x,side])=>{const y0=side==='out'?140:186;
+    el('rect',{x:x-6,y:y0,width:12,height:34,rx:2,fill:'var(--chol)'},co);
+    el('circle',{cx:x,cy:side==='out'?134:226,r:4,fill:'var(--chol)'},co)});
+  // peripheral + cytoskeleton
+  const cs=el('g',{class:'part','data-part':'cytoskeleton',tabindex:0,role:'button','aria-label':'Cytoskeleton'},s);
+  el('path',{d:'M560 322 C620 300 680 340 740 318 S860 330 890 316',stroke:'var(--muted)','stroke-width':5,fill:'none','stroke-linecap':'round'},cs);
+  el('path',{d:'M650 284 L660 316',stroke:'var(--muted)','stroke-width':3},cs);
+  const pp=el('g',{class:'part','data-part':'peripheral',tabindex:0,role:'button','aria-label':'Peripheral protein'},s);
+  el('ellipse',{cx:640,cy:262,rx:36,ry:22,fill:'var(--protein)',opacity:.85},pp);
+  // tags
+  const tags=[['phospholipid',820,96,'Phospholipid'],['channel',215,92,'Channel protein'],['glycolipid',320,58,'Glycolipid'],['glycoprotein',445,22,'Glycoprotein'],['cholesterol',560,100,'Cholesterol'],['peripheral',640,300,'Peripheral protein'],['cytoskeleton',820,350,'Cytoskeleton']];
+  tags.forEach(([p,x,y,t])=>{const g=s.querySelector(`[data-part="${p}"]`);const c=el('circle',{cx:x-(t.length*3.6)-10,cy:y-4,r:5,class:'tagdot',fill:'var(--tail)'},g);const tx=el('text',{x,y,'text-anchor':'middle'},g);tx.textContent=t;tx.style.fill='var(--ink)'});
+  const seen=new Set(JSON.parse(store.get('seen')||'[]'));
+  const chips=document.getElementById('seenChips');
+  function renderChips(){chips.innerHTML='';Object.keys(parts).forEach(k=>{const c=document.createElement('span');c.className='chip'+(seen.has(k)?' on':'');c.textContent=(seen.has(k)?'✓ ':'')+parts[k].name.split(' (')[0];chips.appendChild(c)});
+    const n=document.createElement('span');n.className='label';n.style.alignSelf='center';n.textContent=`${seen.size} / 7 explored`;chips.appendChild(n);
+    s.querySelectorAll('.part').forEach(g=>g.classList.toggle('seen',seen.has(g.dataset.part)))}
+  function show(k){const p=parts[k];seen.add(k);store.set('seen',JSON.stringify([...seen]));renderChips();
+    document.getElementById('info').innerHTML=`<span class="label">Component</span><h3>${p.name}</h3><dl><div><dt>Structure</dt><dd>${p.structure}</dd></div><div><dt>Function</dt><dd>${p.func}</dd></div><div><dt>AP connection</dt><dd>${p.ap}</dd></div></dl>`}
+  s.querySelectorAll('.part').forEach(g=>{g.addEventListener('click',()=>show(g.dataset.part));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();show(g.dataset.part)}})});
+  renderChips();})();
+
+/* fluidity lab */
+(function(){const T=document.getElementById('temp'),U=document.getElementById('unsat'),C=document.getElementById('chol');
+  const cv=document.getElementById('lipidCanvas'),ctx=cv.getContext('2d');let W=600,H=230,f=0.5;
+  const ok=JSON.parse(store.get('chal')||'{}');const flags={cold5:false,hot42:false};
+  function fluid(){const t=+T.value,u=+U.value,c=+C.value;let raw=(t-20)/25*0.5+(u-50)/100*0.6;raw*=1-0.7*c/40;return Math.max(0,Math.min(1,0.5+raw))}
+  function zone(v){return v<0.3?'gel':v>0.78?'leaky':'fluid'}
+  let lip=[];
+  function build(){lip=[];const n=Math.floor(W/16);for(let side=0;side<2;side++)for(let i=0;i<n;i++)lip.push({side,x:i*16+8,ph:Math.random()*6.28,r:Math.random()})}
+  function size(){W=cv.clientWidth||600;cv.width=W*devicePixelRatio;cv.height=H*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);build()}
+  function update(){f=fluid();document.getElementById('tempOut').textContent=T.value+' °C';document.getElementById('unsatOut').textContent=U.value+'%';document.getElementById('cholOut').textContent=C.value+'%';
+    document.getElementById('pin').style.left=(f*100)+'%';const z=zone(f);
+    document.getElementById('stateText').textContent=z==='gel'?'Gel-like: too rigid, proteins can’t move or change shape':z==='leaky'?'Too fluid: barrier is leaky':'Functional fluid';
+    document.getElementById('stateText').style.color=z==='fluid'?'var(--good)':z==='gel'?'var(--protein)':'var(--bad)';
+    if(z==='fluid'&&+T.value<=5)ok.cold=1;if(z==='fluid'&&+T.value>=42)ok.hot=1;
+    if(z==='fluid'&&+U.value===50&&+C.value>0){if(+T.value<=5)ok.c5=1;if(+T.value>=42)ok.c42=1}
+    if(ok.c5&&ok.c42)ok.cholboth=1;store.set('chal',JSON.stringify(ok));
+    document.querySelectorAll('#challenges li').forEach(li=>li.classList.toggle('ok',!!ok[li.dataset.c]));}
+  let t=0;function frame(){t+=1;const head=css('--head'),tail=css('--tail'),chol=css('--chol'),bad=css('--bad');ctx.clearRect(0,0,W,H);
+    const u=+U.value/100,c=+C.value/40,amp=0.5+f*3.5,drift=f*0.5;
+    lip.forEach((l,i)=>{if(!reduce){l.x+=(Math.sin(t*0.05+l.ph)*drift)+(l.side?-1:1)*drift*0.3;if(l.x>W+8)l.x=-8;if(l.x<-8)l.x=W+8}
+      const jx=reduce?0:Math.sin(t*0.13+l.ph)*amp,jy=reduce?0:Math.cos(t*0.11+l.ph)*amp*0.5;const x=l.x+jx;
+      const isChol=l.r<c*0.3;const kink=!isChol&&l.r>1-u;
+      const hy=l.side?190:40;const dir=l.side?-1:1;
+      if(isChol){ctx.fillStyle=chol;ctx.fillRect(x-3,hy+dir*4+(l.side?-34:0)+jy,6,34);return}
+      ctx.strokeStyle=tail;ctx.lineWidth=2.4;ctx.beginPath();
+      ctx.moveTo(x-3,hy+jy);ctx.lineTo(x-3+(reduce?0:Math.sin(t*.2+l.ph)*amp*.5),hy+dir*72);
+      ctx.moveTo(x+3,hy+jy);if(kink){ctx.lineTo(x+3,hy+dir*34);ctx.lineTo(x+9,hy+dir*44);ctx.lineTo(x+9,hy+dir*72)}else ctx.lineTo(x+3,hy+dir*72);ctx.stroke();
+      ctx.fillStyle=head;ctx.beginPath();ctx.arc(x,hy+jy-dir*2,7,0,6.28);ctx.fill()});
+    if(f>0.78){ctx.fillStyle=bad;for(let k=0;k<6;k++){const px=(k*137+t*0.7)%W,py=(t*1.4+k*40)%H;ctx.beginPath();ctx.arc(px,py,3,0,6.28);ctx.fill()}}
+    if(!reduce)requestAnimationFrame(frame)}
+  [T,U,C].forEach(i=>i.addEventListener('input',()=>{update();if(reduce)frame()}));
+  addEventListener('resize',()=>{size();if(reduce)frame()});size();update();frame();})();
+
+/* permeability sort */
+const mols=[
+  ['Oxygen (O₂)','small · nonpolar','free','Small and nonpolar, so it dissolves straight through the hydrophobic core. This is how O₂ reaches your mitochondria.'],
+  ['Carbon dioxide (CO₂)','small · nonpolar overall','free','Small with no net dipole, so it diffuses directly across the bilayer.'],
+  ['Estrogen (steroid hormone)','lipid · nonpolar','free','A lipid-soluble steroid passes through the bilayer, which is why its receptors are inside the cell.'],
+  ['Glucose','large · polar','protein','Too large and polar for the core. It needs a carrier protein (GLUT transporters).'],
+  ['Sodium ion (Na⁺)','small · charged','protein','Small, but its charge and shell of water make the hydrophobic core nearly impossible to cross. It needs channels or pumps.'],
+  ['Water (H₂O)','small · polar','protein','Tricky one. A little water slips through the bilayer slowly, but most crosses quickly through aquaporin channels. For transport at useful speeds, it relies on proteins.'],
+  ['Amino acids','medium · polar/charged','protein','Charged and polar groups keep them out of the core. They use transport proteins.'],
+  ['Ethanol','small · mostly nonpolar','free','Small with a large nonpolar region, so it crosses the bilayer easily. That is part of why alcohol is absorbed so fast.']];
+(function(){const box=document.getElementById('molecules');const ans=JSON.parse(store.get('sort')||'{}');
+  function score(){const n=Object.keys(ans).length,r=Object.keys(ans).filter(k=>ans[k]===mols[k][2]).length;document.getElementById('sortScore').textContent=`${n} of 8 sorted · ${r} correct on first try`}
+  mols.forEach((m,i)=>{const d=document.createElement('div');d.className='mol';d.innerHTML=`<span class="nm">${m[0]}</span><span class="fx">${m[1]}</span><div class="opts"><button data-v="free">Crosses bilayer directly</button><button data-v="protein">Needs a protein</button></div><p class="fb" hidden></p>`;
+    const fb=d.querySelector('.fb');function reveal(v){d.classList.add(v===m[2]?'right':'wrong');fb.hidden=false;fb.innerHTML=`<b>${v===m[2]?'Correct.':'Not quite.'}</b> ${m[3]}`;d.querySelectorAll('button').forEach(b=>b.disabled=true)}
+    d.querySelectorAll('button').forEach(b=>b.onclick=()=>{ans[i]=b.dataset.v;store.set('sort',JSON.stringify(ans));reveal(b.dataset.v);score()});
+    if(ans[i])reveal(ans[i]);box.appendChild(d)});score();})();
+
+/* properties */
+const props=[
+  ['Fluidity','<path d="M4 14c4-6 8 6 12 0s8 6 12 0" />','Phospholipids and many proteins drift sideways within their layer, so the membrane behaves like a 2-D liquid rather than a solid sheet.','Watch the swirling color bands on a bubble’s surface. What are they telling you about how soap molecules move?','p1'],
+  ['Flexibility','<path d="M4 20c6-14 18-14 24 0" />','The membrane bends and changes shape without breaking: red blood cells fold through narrow capillaries, and cells engulf food by endocytosis.','What will happen to a bubble when you gently press on it with a wet straw or blow on it?','p2'],
+  ['Self-sealing','<circle cx="16" cy="14" r="9"/><path d="M16 2v24" stroke-dasharray="3 3"/>','A small puncture closes on its own because exposing hydrophobic tails to water is unstable. The lipids flow back together.','What will happen when you push a wet pencil through a bubble and pull it out? What about a dry pencil?','p3'],
+  ['Selective permeability','<rect x="5" y="8" width="22" height="12" rx="3"/><path d="M11 4v20M21 4v20" stroke-dasharray="2 4"/>','The hydrophobic core lets some things through (small nonpolar molecules) and blocks others (ions, large polar molecules).','Which objects will pass through a bubble without popping it? What property do they share?','p4'],
+  ['Self-assembly','<circle cx="10" cy="14" r="4"/><circle cx="22" cy="14" r="4"/><path d="M14 14h4"/>','Amphipathic molecules arrange into a bilayer automatically in water. No energy or template is needed.','When you dip a wand into soap solution and pull it out, what forms on its own and why?','p5'],
+  ['Fusion and budding','<circle cx="11" cy="14" r="7"/><circle cx="21" cy="14" r="7"/>','Membranes can merge (a vesicle fusing with the plasma membrane during exocytosis) or pinch off new compartments (endocytosis).','What will happen when two bubbles touch? Can you make a bubble inside another bubble?','p6']];
+(function(){const box=document.getElementById('props');props.forEach(p=>{const d=document.createElement('article');d.className='prop';
+  d.innerHTML=`<h3><svg width="32" height="28" viewBox="0 0 32 28" fill="none" stroke="var(--head)" stroke-width="2" aria-hidden="true">${p[1]}</svg>${p[0]}</h3><p class="cell"><span class="label">In the cell</span><br>${p[2]}</p><p class="bub"><span class="label">Bubble lab question</span><br>${p[3]}</p><label for="${p[4]}"><b>My prediction</b></label><textarea id="${p[4]}" data-label="Bubble prediction – ${p[0]}"></textarea>`;
+  box.appendChild(d);const t=d.querySelector('textarea');const v=store.get(t.id);if(v)t.value=v;t.addEventListener('input',()=>store.set(t.id,t.value))})})();
+
+/* quiz */
+const quiz=[
+  ['Phospholipids placed in water spontaneously form a bilayer. Which statement best explains this?',['The phosphate heads are hydrophobic and cluster together away from water.','The fatty acid tails are nonpolar, so the arrangement that minimizes their contact with water while keeping the polar heads in water is most stable.','ATP is required to drive the tails into the center of the bilayer.','Covalent bonds form between the tails of neighboring phospholipids.'],1,'The bilayer forms because of the hydrophobic effect, with no energy input or covalent bonding. Heads interact with water; tails are shielded from it.'],
+  ['A species of fish lives in water near 0 °C. Compared with a related tropical species, its membranes most likely contain',['more saturated fatty acids, to increase fluidity.','more unsaturated fatty acids, to prevent the membrane from becoming too rigid.','fewer proteins, to reduce membrane thickness.','no cholesterol, because cholesterol only works at high temperatures.'],1,'Kinks from double bonds keep tails from packing tightly, which keeps the membrane fluid in the cold.'],
+  ['In the Frye–Edidin experiment, mouse and human membrane proteins intermixed within 40 minutes at 37 °C but stayed largely separated at 15 °C. This result best supports the claim that',['membrane proteins are synthesized only at 37 °C.','membrane proteins can move laterally in a fluid bilayer, and that movement depends on temperature.','human and mouse proteins are identical.','proteins form a rigid layer coating the surface of the bilayer.'],1,'The mixing shows lateral movement (fluidity). Slower mixing in the cold shows fluidity depends on temperature. A rigid protein coat (choice D) would not mix.'],
+  ['Which molecule would cross a pure phospholipid bilayer (no proteins) most rapidly?',['K⁺','Glucose','O₂','An amino acid'],2,'O₂ is small and nonpolar, so it dissolves through the hydrophobic core. The others are charged or large and polar.'],
+  ['Which statement best describes the effect of cholesterol in an animal cell membrane?',['It increases fluidity at all temperatures.','It decreases fluidity at all temperatures.','It reduces fluidity at high temperatures and keeps the membrane from solidifying at low temperatures.','It forms channels that transport ions.'],2,'Cholesterol is a fluidity buffer, pushing the membrane toward the functional middle at both extremes.'],
+  ['A transmembrane protein has a region of about 20 amino acids that spans the bilayer. The R-groups in this region are most likely',['mostly charged, to bond with phosphate heads.','mostly nonpolar, to interact with the fatty acid tails.','mostly attached to carbohydrates.','randomly polar and nonpolar with no pattern.'],1,'The part of the protein buried in the hydrophobic core must itself be hydrophobic for the protein to be stable there. This is structure fitting function.']];
+(function(){const box=document.getElementById('quiz');const ans=JSON.parse(store.get('quiz')||'{}');
+  function score(){const r=Object.keys(ans).filter(k=>ans[k]===quiz[k][2]).length;document.getElementById('quizScore').textContent=`Score: ${r} / ${quiz.length}`}
+  quiz.forEach((q,i)=>{const d=document.createElement('div');d.className='q';d.innerHTML=`<span class="label">Question ${i+1}</span><p class="stem">${q[0]}</p><div class="choices"></div><p class="why" hidden></p>`;
+    const ch=d.querySelector('.choices');const why=d.querySelector('.why');
+    function reveal(v){ch.querySelectorAll('button').forEach((b,j)=>{b.disabled=true;if(j===q[2])b.classList.add('correct');else if(j===v)b.classList.add('incorrect')});why.hidden=false;why.textContent=(v===q[2]?'Correct. ':'The answer is '+'ABCD'[q[2]]+'. ')+q[3]}
+    q[1].forEach((t,j)=>{const b=document.createElement('button');b.textContent='ABCD'[j]+'. '+t;b.onclick=()=>{ans[i]=j;store.set('quiz',JSON.stringify(ans));reveal(j);score()};ch.appendChild(b)});
+    if(ans[i]!==undefined)reveal(ans[i]);box.appendChild(d)});score();})();
+
+/* gather */
+document.getElementById('gather').onclick=()=>{const L=[];L.push('FLUID MOSAIC MEMBRANE LESSON');L.push('Name: '+(document.getElementById('studentName').value||'(not entered)'));
+  const done=stations.filter(s=>store.get('done_'+s)==='1').length;L.push(`Stations completed: ${done}/9`);
+  L.push('Components explored: '+JSON.parse(store.get('seen')||'[]').length+'/7');
+  L.push(document.getElementById('sortScore').textContent.replace('·','–'));L.push('Exit check '+document.getElementById('quizScore').textContent);L.push('');
+  document.querySelectorAll('textarea[data-label]').forEach(t=>{L.push('## '+t.dataset.label);L.push(t.value.trim()||'(blank)');L.push('')});
+  const s=document.getElementById('summary');s.value=L.join('\n');document.getElementById('copyMsg').textContent='Answers gathered. Copy and submit them.'};
+document.getElementById('copy').onclick=()=>{const s=document.getElementById('summary');if(!s.value)document.getElementById('gather').click();
+  const msg=document.getElementById('copyMsg');navigator.clipboard.writeText(s.value).then(()=>msg.textContent='Copied. Paste it into your submission.').catch(()=>{s.focus();s.select();msg.textContent='Text selected. Press Ctrl+C (or ⌘+C) to copy.'})};
+})();
+</script>
+</body>
+</html>
